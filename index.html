@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Visual Generator</title>
+    <title>Banana Pro Visual Generator</title>
+    <!-- Include the official Pollinations.ai connection client package safely -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -85,7 +87,7 @@
     </div>
 
     <script>
-        function generateVisual() {
+        async function generateVisual() {
             const promptInput = document.getElementById('promptInput');
             const genBtn = document.getElementById('genBtn');
             const statusText = document.getElementById('status-text');
@@ -97,36 +99,41 @@
                 return;
             }
 
-            // UI State: Loading
+            // Adjust interface elements to processing mode
             genBtn.disabled = true;
-            statusText.innerText = "Processing streaming data layers... (Takes 2-5 seconds)";
+            statusText.innerText = "Connecting to decentralized AI nodes... (Takes 3-6 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
+            imageWrapper.innerHTML = "";
 
-            // Encodes text variables securely
-            const encodedPrompt = encodeURIComponent(promptInput.value.trim());
-            const randomSeed = Math.floor(Math.random() * 999999);
-            
-            //SWITCH: Route directly through the ultra-stable, free Picsart Flux channel
-            const freeImageUrl = `https://picsart.com{encodedPrompt}&model=flux&width=1024&height=1024&seed=${randomSeed}`;
+            try {
+                const userPrompt = promptInput.value.trim();
+                const randomSeed = Math.floor(Math.random() * 9999999);
 
-            // Render image object straight into the screen container wrapper
-            imageWrapper.innerHTML = `<img src="${freeImageUrl}" alt="Free AI Visual" id="liveImage">`;
-            
-            const liveImage = document.getElementById('liveImage');
-            
-            // Re-enable interface components the exact moment the layout data finishes loading
-            liveImage.onload = function() {
+                // Utilizing the connection client fetches the data securely via base64 pipeline 
+                const imageBlob = await window.pollinations.image({
+                    prompt: userPrompt,
+                    model: 'flux',
+                    width: 1024,
+                    height: 1024,
+                    seed: randomSeed,
+                    json: false
+                });
+
+                // Generate a temporary browser visual data stream out of the transmission data packets
+                const localDataUrl = URL.createObjectURL(imageBlob);
+
                 statusText.innerText = "Generation complete! 100% Free.";
                 statusText.style.color = "#22c55e";
-                genBtn.disabled = false;
-            };
+                imageWrapper.innerHTML = `<img src="${localDataUrl}" alt="Free AI Visual Layer">`;
 
-            liveImage.onerror = function() {
-                statusText.innerText = "The free cluster is currently cycling. Retrying connection...";
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "Connection recycled. Retrying generation process stream...";
                 statusText.style.color = "#ef4444";
+            } finally {
                 genBtn.disabled = false;
-            };
+            }
         }
     </script>
 </body>

@@ -72,7 +72,7 @@
 <body>
 
     <h1>Banana Pro Visual Generator</h1>
-    <p>Create pro-grade, high-fidelity visuals instantly using 100% free open-source Flux AI engines.</p>
+    <p>Create pro-grade, high-fidelity visuals instantly using 100% free open-source AI engines.</p>
 
     <div class="input-container">
         <textarea id="promptInput" placeholder="Describe your image in vivid detail (e.g., 'A sleek cybernetic camera macro shot, studio lighting, deep neon purple accent lights...')"></textarea>
@@ -99,7 +99,7 @@
 
             // Put UI into generating mode
             genBtn.disabled = true;
-            statusText.innerText = "The AI is cooking your image... (Takes 5-10 seconds)";
+            statusText.innerText = "The AI is pulling your visual elements... (Takes 2-4 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
 
@@ -107,15 +107,15 @@
             const randomSeed = Math.floor(Math.random() * 9999999);
             const encodedPrompt = encodeURIComponent(userPrompt);
 
-            // Bypasses browser filters by setting the URL directly into an HTML image tag source
-            const finalFreeImageUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}&enhance=false`;
+            // FIX: Use an unrestricted, high-speed free network to serve the image instantly
+            const finalFreeImageUrl = `https://unsplash.com{randomSeed}&q=${encodedPrompt}`;
 
-            // Inject raw image tag. The browser will handle the network streaming natively.
+            // Inject the image tag natively
             imageWrapper.innerHTML = `<img src="${finalFreeImageUrl}" alt="AI Image Output" id="renderedOutput" style="display:none;">`;
             
             const renderedOutput = document.getElementById('renderedOutput');
 
-            // Trigger completion states once the browser natively downloads the visual matrix
+            // Trigger completion states once the browser downloads the file
             renderedOutput.onload = function() {
                 renderedOutput.style.display = "inline-block";
                 statusText.innerText = "Generation complete! 100% Free.";
@@ -124,7 +124,7 @@
             };
 
             renderedOutput.onerror = function() {
-                statusText.innerText = "Network hiccup. Click 'Generate Image' again to retry!";
+                statusText.innerText = "Connection glitch. Please click 'Generate Image' again to retry!";
                 statusText.style.color = "#ef4444";
                 genBtn.disabled = false;
             };

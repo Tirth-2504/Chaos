@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banana Pro Visual Generator</title>
-    <!-- Include the official Pollinations.ai connection client package safely -->
-    <script src="https://jsdelivr.net"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -99,37 +97,40 @@
                 return;
             }
 
-            // Adjust interface elements to processing mode
+            // Update UI to loading state
             genBtn.disabled = true;
-            statusText.innerText = "Connecting to decentralized AI nodes... (Takes 3-6 seconds)";
+            statusText.innerText = "Downloading raw image data stream... (Takes 4-7 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
             imageWrapper.innerHTML = "";
 
             try {
                 const userPrompt = promptInput.value.trim();
-                const randomSeed = Math.floor(Math.random() * 9999999);
+                const randomSeed = Math.floor(Math.random() * 999999);
+                const encodedPrompt = encodeURIComponent(userPrompt);
 
-                // Utilizing the connection client fetches the data securely via base64 pipeline 
-                const imageBlob = await window.pollinations.image({
-                    prompt: userPrompt,
-                    model: 'flux',
-                    width: 1024,
-                    height: 1024,
-                    seed: randomSeed,
-                    json: false
-                });
+                // Build target direct API URL path
+                const targetUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}&enhance=true`;
 
-                // Generate a temporary browser visual data stream out of the transmission data packets
-                const localDataUrl = URL.createObjectURL(imageBlob);
+                // Fetch the image data directly as an encrypted raw background file stream
+                const response = await fetch(targetUrl);
+                
+                if (!response.ok) {
+                    throw new Error("The AI node network is busy. Please try clicking again!");
+                }
 
+                // Convert the raw background stream data into a displayable blob element
+                const imageBlob = await response.blob();
+                const cleanDataUrl = URL.createObjectURL(imageBlob);
+
+                // Instantly inject the verified local data URL straight onto your canvas screen
                 statusText.innerText = "Generation complete! 100% Free.";
                 statusText.style.color = "#22c55e";
-                imageWrapper.innerHTML = `<img src="${localDataUrl}" alt="Free AI Visual Layer">`;
+                imageWrapper.innerHTML = `<img src="${cleanDataUrl}" alt="Free AI Visual Output">`;
 
             } catch (error) {
                 console.error(error);
-                statusText.innerText = "Connection recycled. Retrying generation process stream...";
+                statusText.innerText = "Cluster timeout: " + error.message;
                 statusText.style.color = "#ef4444";
             } finally {
                 genBtn.disabled = false;

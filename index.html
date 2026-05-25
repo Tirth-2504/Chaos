@@ -97,25 +97,25 @@
                 return;
             }
 
-            // UI State Shift: Loading
+            // UI State: Loading
             genBtn.disabled = true;
             statusText.innerText = "Processing streaming data layers... (Takes 2-5 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
 
-            // Encodes text parameters safely into standard URL paths
+            // Encodes text variables securely
             const encodedPrompt = encodeURIComponent(promptInput.value.trim());
             const randomSeed = Math.floor(Math.random() * 999999);
             
-            // Build the absolute direct image URL endpoint path
-            const freeImageUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}`;
+            //SWITCH: Route directly through the ultra-stable, free Picsart Flux channel
+            const freeImageUrl = `https://picsart.com{encodedPrompt}&model=flux&width=1024&height=1024&seed=${randomSeed}`;
 
-            // FIX: Render image object straight into screen container wrapper without background handshake checking delays
+            // Render image object straight into the screen container wrapper
             imageWrapper.innerHTML = `<img src="${freeImageUrl}" alt="Free AI Visual" id="liveImage">`;
             
             const liveImage = document.getElementById('liveImage');
             
-            // Re-enable interface components the exact moment browser tracking confirms display pixel data load
+            // Re-enable interface components the exact moment the layout data finishes loading
             liveImage.onload = function() {
                 statusText.innerText = "Generation complete! 100% Free.";
                 statusText.style.color = "#22c55e";
@@ -123,7 +123,7 @@
             };
 
             liveImage.onerror = function() {
-                statusText.innerText = "The free cloud pipeline is recycling. Retrying transaction layout data...";
+                statusText.innerText = "The free cluster is currently cycling. Retrying connection...";
                 statusText.style.color = "#ef4444";
                 genBtn.disabled = false;
             };

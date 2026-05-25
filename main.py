@@ -21,6 +21,11 @@ class PromptRequest(BaseModel):
 def home():
     return {"status": "The Python server is fully functional!"}
 
+@app.get("/")
+def read_root():
+    return {"status": "healthy"}
+
+
 @app.post("/generate")
 def generate_image(request: PromptRequest):
     if not os.environ.get("FAL_KEY") and not os.getenv("FAL_KEY"):

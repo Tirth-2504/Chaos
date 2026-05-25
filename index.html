@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Visual Generator</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent: #eab308;
+            --accent-hover: #ca8a04;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        p { color: #94a3b8; margin-bottom: 30px; }
+        .input-container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            resize: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        textarea:focus { border-color: var(--accent); outline: none; }
+        button {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: var(--accent-hover); }
+        button:disabled { background-color: #475569; cursor: not-allowed; }
+        #result-container {
+            margin-top: 40px;
+            display: none;
+        }
+        #status-text { margin-top: 20px; font-weight: 500; }
+        img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Banana Pro Visual Generator</h1>
+    <p>Create pro-grade, high-fidelity visuals instantly using open-source Flux AI engines.</p>
+
+    <div class="input-container">
+        <textarea id="promptInput" placeholder="Describe your image in vivid detail (e.g., 'A sleek cybernetic camera macro shot, studio lighting, deep neon purple accent lights...')"></textarea>
+        <button id="genBtn" onclick="generateVisual()">Generate Image</button>
+        <div id="status-text"></div>
+    </div>
+
+    <div id="result-container">
+        <div id="imageWrapper"></div>
+    </div>
+
+    <script>
+        // Replace this URL with your live Render URL later when you deploy
+        const BACKEND_URL = "http://127.0.0.1:8000"; 
+
+        async function generateVisual() {
+            const promptInput = document.getElementById('promptInput');
+            const genBtn = document.getElementById('genBtn');
+            const statusText = document.getElementById('status-text');
+            const resultContainer = document.getElementById('result-container');
+            const imageWrapper = document.getElementById('imageWrapper');
+
+            if (!promptInput.value.trim()) {
+                alert("Please type a description first!");
+                return;
+            }
+
+            // UI State Change: Loading
+            genBtn.disabled = true;
+            statusText.innerText = "Connecting to AI cluster... (Takes 3-5 seconds)";
+            statusText.style.color = "#eab308";
+            resultContainer.style.display = "block";
+            imageWrapper.innerHTML = "";
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptInput.value })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.image_url) {
+                    statusText.innerText = "Generation complete!";
+                    statusText.style.color = "#22c55e";
+                    imageWrapper.innerHTML = `<img src="${data.image_url}" alt="AI Visual">`;
+                } else {
+                    throw new Error(data.detail || "Failed to generate image.");
+                }
+            } catch (error) {
+                statusText.innerText = "Error: " + error.message;
+                statusText.style.color = "#ef4444";
+            } finally {
+                genBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

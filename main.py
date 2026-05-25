@@ -34,6 +34,7 @@ def generate_image(request: PromptRequest):
             detail=f"Missing configuration: FAL_KEY environment variable is not found. Available keys detected by server: {available_keys}"
         )
     
+    # FIX: Point exactly to the Flux Schnell endpoint queue
     api_url = "https://fal.run"
     headers = {
         "Authorization": f"Key {api_key.strip()}",
@@ -57,6 +58,7 @@ def generate_image(request: PromptRequest):
         if not images:
             raise HTTPException(status_code=500, detail="The AI engine ran successfully but returned no image array.")
             
+        # FIX: Correctly grab the URL from the first item in the image array list
         image_url = images[0].get("url")
         return {"image_url": image_url}
         

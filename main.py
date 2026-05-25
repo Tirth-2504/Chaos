@@ -23,18 +23,16 @@ def home():
 
 @app.post("/generate")
 def generate_image(request: PromptRequest):
-    # Try multiple ways Render stores variables to prevent environment reading errors
     api_key = os.environ.get("FAL_KEY") or os.getenv("FAL_KEY")
     
-    # Strictly for testing: If it still fails, we output the available keys to see what Render is doing
     if not api_key:
         available_keys = list(os.environ.keys())
         raise HTTPException(
             status_code=500, 
-            detail=f"Missing configuration: FAL_KEY environment variable is not found. Available keys detected by server: {available_keys}"
+            detail=f"Missing configuration: FAL_KEY variable not found. Keys: {available_keys}"
         )
     
-    # FIX: Point exactly to the Flux Schnell endpoint queue
+    # Standard official endpoint for Flux Schnell
     api_url = "https://fal.run"
     headers = {
         "Authorization": f"Key {api_key.strip()}",
@@ -54,12 +52,16 @@ def generate_image(request: PromptRequest):
             raise HTTPException(status_code=response.status_code, detail=f"AI Engine Error: {response.text}")
             
         result = response.json()
-        images = result.get("images", [])
-        if not images:
-            raise HTTPException(status_code=500, detail="The AI engine ran successfully but returned no image array.")
+        
+        # FIX: Correctly extract the image list array
+        images_list = result.get("images", [])
+        if not images_list:
+            raise HTTPException(status_code=500, detail="The AI engine ran successfully but returned no images.")
             
-        # FIX: Correctly grab the URL from the first item in the image array list
-        image_url = images[0].get("url")
+        # FIX: Extract the dictionary safely out of the list array index
+        first_image_object = images_list[0]
+        image_url = first_image_object.get("url")
+        
         return {"image_url": image_url}
         
     except requests.exceptions.RequestException as e:

@@ -1,5 +1,5 @@
 import os
-import requests
+import fal_client
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -19,53 +19,37 @@ class PromptRequest(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "Server is up and running!"}
+    return {"status": "The Python server is fully functional!"}
 
 @app.post("/generate")
 def generate_image(request: PromptRequest):
-    api_key = os.environ.get("FAL_KEY") or os.getenv("FAL_KEY")
-    
-    if not api_key:
-        available_keys = list(os.environ.keys())
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Missing configuration: FAL_KEY variable not found. Keys: {available_keys}"
-        )
-    
-    # Standard official endpoint for Flux Schnell
-    api_url = "https://fal.run"
-    headers = {
-        "Authorization": f"Key {api_key.strip()}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "prompt": request.prompt,
-        "image_size": "square_hd",
-        "sync_mode": True,
-        "num_inference_steps": 4
-    }
+    if not os.environ.get("FAL_KEY") and not os.getenv("FAL_KEY"):
+        raise HTTPException(status_code=500, detail="Configuration Error: FAL_KEY variable was not found on Render.")
 
     try:
-        response = requests.post(api_url, json=payload, headers=headers, timeout=30)
+        result = fal_client.subscribe(
+            "fal-ai/flux/schnell",
+            arguments={
+                "prompt": request.prompt,
+                "image_size": "square_hd",
+                "num_inference_steps": 4,
+                "sync_mode": True
+            }
+        )
         
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail=f"AI Engine Error: {response.text}")
-            
-        result = response.json()
-        
-        # FIX: Correctly extract the image list array
+        # SAFELY EXTRACT ARRAY: Fal.ai returns {"images": [{"url": "..."}]}
         images_list = result.get("images", [])
-        if not images_list:
-            raise HTTPException(status_code=500, detail="The AI engine ran successfully but returned no images.")
+        if not images_list or not isinstance(images_list, list):
+            raise HTTPException(status_code=500, detail=f"Data structure error. Got raw result: {result}")
             
-        # FIX: Extract the dictionary safely out of the list array index
+        # Extract the dictionary out of the first index position of the array list
         first_image_object = images_list[0]
         image_url = first_image_object.get("url")
         
         return {"image_url": image_url}
         
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Network communication failed: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"The AI Engine threw an error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

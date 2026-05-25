@@ -85,7 +85,7 @@
     </div>
 
     <script>
-        async function generateVisual() {
+        function generateVisual() {
             const promptInput = document.getElementById('promptInput');
             const genBtn = document.getElementById('genBtn');
             const statusText = document.getElementById('status-text');
@@ -97,44 +97,37 @@
                 return;
             }
 
-            // Update UI to loading state
+            // Put UI into generating mode
             genBtn.disabled = true;
-            statusText.innerText = "Downloading raw image data stream... (Takes 4-7 seconds)";
+            statusText.innerText = "The AI is cooking your image... (Takes 5-10 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
-            imageWrapper.innerHTML = "";
 
-            try {
-                const userPrompt = promptInput.value.trim();
-                const randomSeed = Math.floor(Math.random() * 999999);
-                const encodedPrompt = encodeURIComponent(userPrompt);
+            const userPrompt = promptInput.value.trim();
+            const randomSeed = Math.floor(Math.random() * 9999999);
+            const encodedPrompt = encodeURIComponent(userPrompt);
 
-                // Build target direct API URL path
-                const targetUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}&enhance=true`;
+            // Bypasses browser filters by setting the URL directly into an HTML image tag source
+            const finalFreeImageUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}&enhance=false`;
 
-                // Fetch the image data directly as an encrypted raw background file stream
-                const response = await fetch(targetUrl);
-                
-                if (!response.ok) {
-                    throw new Error("The AI node network is busy. Please try clicking again!");
-                }
+            // Inject raw image tag. The browser will handle the network streaming natively.
+            imageWrapper.innerHTML = `<img src="${finalFreeImageUrl}" alt="AI Image Output" id="renderedOutput" style="display:none;">`;
+            
+            const renderedOutput = document.getElementById('renderedOutput');
 
-                // Convert the raw background stream data into a displayable blob element
-                const imageBlob = await response.blob();
-                const cleanDataUrl = URL.createObjectURL(imageBlob);
-
-                // Instantly inject the verified local data URL straight onto your canvas screen
+            // Trigger completion states once the browser natively downloads the visual matrix
+            renderedOutput.onload = function() {
+                renderedOutput.style.display = "inline-block";
                 statusText.innerText = "Generation complete! 100% Free.";
                 statusText.style.color = "#22c55e";
-                imageWrapper.innerHTML = `<img src="${cleanDataUrl}" alt="Free AI Visual Output">`;
-
-            } catch (error) {
-                console.error(error);
-                statusText.innerText = "Cluster timeout: " + error.message;
-                statusText.style.color = "#ef4444";
-            } finally {
                 genBtn.disabled = false;
-            }
+            };
+
+            renderedOutput.onerror = function() {
+                statusText.innerText = "Network hiccup. Click 'Generate Image' again to retry!";
+                statusText.style.color = "#ef4444";
+                genBtn.disabled = false;
+            };
         }
     </script>
 </body>

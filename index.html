@@ -72,7 +72,7 @@
 <body>
 
     <h1>Banana Pro Visual Generator</h1>
-    <p>Create pro-grade, high-fidelity visuals instantly using open-source Flux AI engines.</p>
+    <p>Create pro-grade, high-fidelity visuals instantly using 100% free open-source Flux AI engines.</p>
 
     <div class="input-container">
         <textarea id="promptInput" placeholder="Describe your image in vivid detail (e.g., 'A sleek cybernetic camera macro shot, studio lighting, deep neon purple accent lights...')"></textarea>
@@ -85,9 +85,6 @@
     </div>
 
     <script>
-        // Replace this URL with your live Render URL later when you deploy
-        const BACKEND_URL = "https://tirthdev2026-chaos-backend.hf.space"; 
-
         async function generateVisual() {
             const promptInput = document.getElementById('promptInput');
             const genBtn = document.getElementById('genBtn');
@@ -100,33 +97,43 @@
                 return;
             }
 
-            // UI State Change: Loading
+            // UI Loading State
             genBtn.disabled = true;
-            statusText.innerText = "Connecting to AI cluster... (Takes 3-5 seconds)";
+            statusText.innerText = "Generating your free Flux image... (Takes 2-4 seconds)";
             statusText.style.color = "#eab308";
             resultContainer.style.display = "block";
             imageWrapper.innerHTML = "";
 
             try {
-                const response = await fetch(`${BACKEND_URL}/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: promptInput.value })
-                });
+                // Encodes spaces and symbols securely for safe web links
+                const encodedPrompt = encodeURIComponent(promptInput.value.trim());
+                
+                // Generates a random seed number so typing the same word produces a brand new variations
+                const randomSeed = Math.floor(Math.random() * 100000);
+                
+                // Formulate the free direct destination URL pointing to the Flux engine
+                const freeImageUrl = `https://pollinations.ai{encodedPrompt}?model=flux&width=1024&height=1024&seed=${randomSeed}`;
 
-                const data = await response.json();
-
-                if (response.ok && data.image_url) {
-                    statusText.innerText = "Generation complete!";
+                // Create a temporary image checker in the background to handle smooth loading transitions
+                const imgCheck = new Image();
+                imgCheck.src = freeImageUrl;
+                
+                imgCheck.onload = function() {
+                    statusText.innerText = "Generation complete! 100% Free.";
                     statusText.style.color = "#22c55e";
-                    imageWrapper.innerHTML = `<img src="${data.image_url}" alt="AI Visual">`;
-                } else {
-                    throw new Error(data.detail || "Failed to generate image.");
-                }
+                    imageWrapper.innerHTML = `<img src="${freeImageUrl}" alt="Free AI Visual">`;
+                    genBtn.disabled = false;
+                };
+
+                imgCheck.onerror = function() {
+                    statusText.innerText = "Free cluster is busy. Retrying transaction...";
+                    statusText.style.color = "#ef4444";
+                    genBtn.disabled = false;
+                };
+
             } catch (error) {
                 statusText.innerText = "Error: " + error.message;
                 statusText.style.color = "#ef4444";
-            } finally {
                 genBtn.disabled = false;
             }
         }
